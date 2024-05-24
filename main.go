@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -12,7 +13,17 @@ func hello(w http.ResponseWriter, req *http.Request) {
 }
 
 func add(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "I'm the mighty calculator, but I don't know how to calculate sum just yet\n")
+	var numbers []int
+	err := json.NewDecoder(req.Body).Decode(&numbers)
+	if err != nil {
+		log.WithError(err).Warn() //todo return HTTP error
+	}
+	sum := 0
+	for _, number := range numbers {
+		sum += number
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(sum)
 }
 
 func logRequest(handler http.Handler) http.Handler {
