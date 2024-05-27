@@ -8,6 +8,6 @@ Toy project to learn more go, kubernetes and AWS. Makes very little sense ;)
 
 ```sh
 go build
-./gombobulator &
+go run . &
 curl 127.0.0.1:7890/add --data "[1,2,3]"
 ```
