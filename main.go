@@ -8,22 +8,27 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func hello(w http.ResponseWriter, req *http.Request) {
+func hello_handler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "I'm the mighty calculator, the result is 42\n")
 }
 
-func add(w http.ResponseWriter, req *http.Request) {
+func add_handler(w http.ResponseWriter, req *http.Request) {
 	var numbers []int
 	err := json.NewDecoder(req.Body).Decode(&numbers)
 	if err != nil {
 		log.WithError(err).Warn() //todo return HTTP error
 	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(add(numbers))
+}
+
+func add(numbers []int) int {
+	//TODO consider int size
 	sum := 0
 	for _, number := range numbers {
 		sum += number
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(sum)
+	return sum
 }
 
 func logRequest(handler http.Handler) http.Handler {
@@ -35,8 +40,8 @@ func logRequest(handler http.Handler) http.Handler {
 
 func main() {
 	log.SetLevel(log.DebugLevel) //TODO configure
-	http.HandleFunc("/", hello)
-	http.HandleFunc("/add", add)
+	http.HandleFunc("/", hello_handler)
+	http.HandleFunc("/add", add_handler)
 	log.Info("starting the server")
 	err := http.ListenAndServe(":7890", logRequest(http.DefaultServeMux))
 	if err != nil {
