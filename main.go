@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -19,7 +20,23 @@ func add_handler(w http.ResponseWriter, req *http.Request) {
 		log.WithError(err).Warn() //todo return HTTP error
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(add(numbers))
+	sum := add_launcher(numbers)
+	json.NewEncoder(w).Encode(sum)
+}
+
+func add_launcher(numbers []int) int {
+	var wg sync.WaitGroup
+	sums := make(chan int)
+	wg.Add(1)
+	go add_async(numbers, sums, &wg)
+	sum := <-sums //TODO iterate
+	wg.Wait()
+	return sum
+}
+
+func add_async(numbers []int, output chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	output <- add(numbers)
 }
 
 func add(numbers []int) int {
