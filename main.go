@@ -27,11 +27,17 @@ func add_handler(w http.ResponseWriter, req *http.Request) {
 func add_launcher(numbers []int) int {
 	var wg sync.WaitGroup
 	partial_sums := make(chan int)
-	// pool_size := len(numbers) / 2
-	pool_size := 1
+	if len(numbers)%2 != 0 {
+		numbers = append(numbers, 0)
+		// pad with additional zero if odd count
+	}
+	pool_size := len(numbers) / 2
 	wg.Add(pool_size)
-	for range pool_size {
-		go add_async(numbers, partial_sums, &wg)
+	for i := range pool_size {
+		low := i * 2
+		high := ((i + 1) * 2)
+		log.WithFields(log.Fields{"low": low, "high": high}).Debug("Launching calculation")
+		go add_async(numbers[low:high], partial_sums, &wg)
 	}
 	sum := 0
 	for range pool_size {
